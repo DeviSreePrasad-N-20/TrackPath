@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  trackpath:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trackpath-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - JWT_SECRET=trackpath-production-super-secret-key
+    volumes:
+      - trackpath_data:/app/data
+
+volumes:
+  trackpath_data:

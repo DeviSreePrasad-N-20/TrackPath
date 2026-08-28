@@ -1,0 +1,38 @@
+[
+  {
+    "id": "v1",
+    "traineeId": "t01",
+    "employerName": "Jaipur Stitchworks",
+    "date": "2026-02-15",
+    "status": "employed",
+    "tenure": "8–12 months",
+    "wageBand": "₹15k–20k"
+  },
+  {
+    "id": "v2",
+    "traineeId": "t11",
+    "employerName": "Mysuru TechServe",
+    "date": "2025-12-05",
+    "status": "employed",
+    "tenure": "6–12 months",
+    "wageBand": "₹20k–30k"
+  },
+  {
+    "id": "55d227a1-bd5b-4332-b4fb-740dc71ce11d",
+    "traineeId": "t02",
+    "employerName": "Mewar Apparel",
+    "date": "2026-08-28",
+    "status": "employed",
+    "tenure": "3–6 months",
+    "wageBand": "₹10k–15k"
+  },
+  {
+    "id": "0b7b5315-19c2-4628-8161-a0fe16731805",
+    "traineeId": "t01",
+    "employerName": "htdyd",
+    "date": "2026-08-28",
+    "status": "employed",
+    "tenure": "Less than 3 months",
+    "wageBand": "Below ₹10k"
+  }
+]

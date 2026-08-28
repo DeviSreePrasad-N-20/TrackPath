@@ -1,0 +1,22 @@
+{
+  "name": "trackpath-mvp",
+  "version": "1.0.0",
+  "description": "Government skilling outcome tracking MVP",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js",
+    "build": "npm --prefix frontend-react install && npm --prefix frontend-react run build",
+    "postinstall": "npm --prefix frontend-react install && npm --prefix frontend-react run build"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
+    "uuid": "^11.0.5"
+  }
+}

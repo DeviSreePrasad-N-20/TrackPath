@@ -1,0 +1,222 @@
+[
+  {
+    "traineeId": "t01",
+    "date": "2025-06-20",
+    "status": "employed",
+    "role": "Tailoring assistant",
+    "wageBand": "₹10k–15k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t01",
+    "date": "2026-02-12",
+    "status": "employed",
+    "role": "Senior tailor",
+    "wageBand": "₹15k–20k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t02",
+    "date": "2025-07-10",
+    "status": "self-employed",
+    "role": "Home tailoring",
+    "wageBand": "₹10k–15k",
+    "usingSkill": true,
+    "selfEmployed": true
+  },
+  {
+    "traineeId": "t03",
+    "date": "2025-01-05",
+    "status": "employed",
+    "role": "Machine operator",
+    "wageBand": "₹10k–15k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t03",
+    "date": "2025-09-08",
+    "status": "not-employed",
+    "role": "",
+    "wageBand": "Below ₹10k",
+    "usingSkill": false,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t05",
+    "date": "2025-08-14",
+    "status": "apprenticeship",
+    "role": "Alterations trainee",
+    "wageBand": "Below ₹10k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t06",
+    "date": "2025-01-15",
+    "status": "employed",
+    "role": "Electrician helper",
+    "wageBand": "₹10k–15k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t06",
+    "date": "2025-10-20",
+    "status": "employed",
+    "role": "Field electrician",
+    "wageBand": "₹15k–20k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t07",
+    "date": "2025-02-20",
+    "status": "employed",
+    "role": "Maintenance assistant",
+    "wageBand": "₹15k–20k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t08",
+    "date": "2025-08-15",
+    "status": "employed",
+    "role": "Electrical technician",
+    "wageBand": "₹10k–15k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t09",
+    "date": "2025-03-18",
+    "status": "not-employed",
+    "role": "",
+    "wageBand": "Below ₹10k",
+    "usingSkill": false,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t11",
+    "date": "2025-02-12",
+    "status": "employed",
+    "role": "Helpdesk associate",
+    "wageBand": "₹15k–20k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t11",
+    "date": "2025-11-30",
+    "status": "employed",
+    "role": "IT support analyst",
+    "wageBand": "₹20k–30k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t12",
+    "date": "2025-03-02",
+    "status": "employed",
+    "role": "Desktop support trainee",
+    "wageBand": "₹10k–15k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t13",
+    "date": "2025-08-05",
+    "status": "apprenticeship",
+    "role": "Service desk apprentice",
+    "wageBand": "₹10k–15k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t14",
+    "date": "2025-04-10",
+    "status": "not-employed",
+    "role": "",
+    "wageBand": "Below ₹10k",
+    "usingSkill": false,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t15",
+    "date": "2025-08-22",
+    "status": "self-employed",
+    "role": "Freelance tech support",
+    "wageBand": "₹15k–20k",
+    "usingSkill": true,
+    "selfEmployed": true
+  },
+  {
+    "traineeId": "t16",
+    "date": "2025-02-05",
+    "status": "employed",
+    "role": "Boutique assistant",
+    "wageBand": "₹10k–15k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t17",
+    "date": "2025-08-29",
+    "status": "not-employed",
+    "role": "",
+    "wageBand": "Below ₹10k",
+    "usingSkill": false,
+    "selfEmployed": false
+  },
+  {
+    "traineeId": "t18",
+    "date": "2025-08-30",
+    "status": "employed",
+    "role": "IT support associate",
+    "wageBand": "₹15k–20k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "id": "b9ab1cac-75f7-4c8c-a38c-293a33e15ae6",
+    "traineeId": "t02",
+    "date": "2026-08-28",
+    "status": "employed",
+    "role": "fronted",
+    "wageBand": "Below ₹10k",
+    "usingSkill": true,
+    "selfEmployed": false
+  },
+  {
+    "id": "ab561d12-4963-428c-81af-5820c96bc6cf",
+    "traineeId": "t01",
+    "date": "2026-08-28",
+    "status": "employed",
+    "role": "",
+    "wageBand": "Below ₹10k",
+    "usingSkill": false,
+    "selfEmployed": false
+  },
+  {
+    "id": "d861b412-5278-4347-a4de-dc90b73ac605",
+    "traineeId": "t01",
+    "date": "2026-08-28",
+    "status": "employed",
+    "role": "",
+    "wageBand": "Below ₹10k",
+    "usingSkill": false,
+    "selfEmployed": false
+  },
+  {
+    "id": "638ef9b0-b25f-4b9b-8f99-c3927f6797bb",
+    "traineeId": "t01",
+    "date": "2026-08-28",
+    "status": "employed",
+    "role": "",
+    "wageBand": "Below ₹10k",
+    "usingSkill": false,
+    "selfEmployed": false
+  }
+]

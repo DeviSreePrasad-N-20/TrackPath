@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+frontend-react/node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Build output (built dynamically on deployment)
+frontend-react/dist/
+dist/
+
+# OS & Logs
+.DS_Store
+Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database files
+*.db-journal
