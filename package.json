@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "node backend/server.js",
-    "build": "npm --prefix frontend-react install && npm --prefix frontend-react run build",
-    "postinstall": "npm --prefix frontend-react install && npm --prefix frontend-react run build"
+    "build": "npm --prefix frontend-react install && npm --prefix frontend-react run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
