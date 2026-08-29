@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api';
 import Layout from '../components/Layout';
-import { Briefcase, CreditCard, Award, ArrowRight, UserCheck, MessageSquare, CheckCircle2, Clock, X, Shield, Calendar, MapPin, Building, Sparkles } from 'lucide-react';
+import { 
+  Briefcase, CreditCard, Award, ArrowRight, UserCheck, MessageSquare, CheckCircle2, Clock, X, 
+  Shield, Calendar, MapPin, Building, Sparkles, Check, ChevronRight, Lock, Zap, RefreshCw, BarChart2
+} from 'lucide-react';
 
 export default function TraineeCheckin({ auth, handleLogout }) {
   const [traineeDetail, setTraineeDetail] = useState(null);
@@ -19,6 +22,7 @@ export default function TraineeCheckin({ auth, handleLogout }) {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showWageModal, setShowWageModal] = useState(false);
   const [showSkillModal, setShowSkillModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [actionSuccess, setActionSuccess] = useState('');
 
   // Form states
@@ -26,8 +30,20 @@ export default function TraineeCheckin({ auth, handleLogout }) {
   const [roleTitle, setRoleTitle] = useState('Junior Software Associate');
   const [wageBand, setWageBand] = useState('₹20k - ₹30k');
   const [usingSkill, setUsingSkill] = useState(true);
-  const [dropoutReason, setDropoutReason] = useState('Low wages');
   const [consent, setConsent] = useState(true);
+  
+  // Granular Privacy States
+  const [allowEmployerVerification, setAllowEmployerVerification] = useState(true);
+  const [allowPolicyAnalytics, setAllowPolicyAnalytics] = useState(true);
+  const [allowSkillBenchmarking, setAllowSkillBenchmarking] = useState(true);
+
+  // Skill Utilisation state
+  const [skillRatings, setSkillRatings] = useState({
+    communication: 90,
+    technical: 80,
+    digitalTools: 60,
+    problemSolving: 70
+  });
 
   const loadProfile = async () => {
     try {
@@ -50,8 +66,8 @@ export default function TraineeCheckin({ auth, handleLogout }) {
       const newConsent = !consent;
       setConsent(newConsent);
       await api.patch('/api/trainees/me/consent', { consent: newConsent });
-      setActionSuccess(newConsent ? 'Consent enabled for tracking' : 'Consent revoked');
-      setTimeout(() => setActionSuccess(''), 3000);
+      setActionSuccess(newConsent ? 'Consent enabled for longitudinal tracking' : 'Consent revoked: Data masked from analytics');
+      setTimeout(() => setActionSuccess(''), 3500);
       loadProfile();
     } catch (err) {
       console.error(err);
@@ -69,8 +85,6 @@ export default function TraineeCheckin({ auth, handleLogout }) {
         selfEmployed: status === 'self-employed'
       });
       setShowUpdateModal(false);
-      setShowWageModal(false);
-      setShowSkillModal(false);
       setActionSuccess('Employment check-in submitted successfully!');
       setTimeout(() => setActionSuccess(''), 3500);
       loadProfile();
@@ -79,525 +93,457 @@ export default function TraineeCheckin({ auth, handleLogout }) {
     }
   };
 
-  if (!traineeDetail) return (
-    <Layout auth={auth} handleLogout={handleLogout}>
-      <div className="flex justify-center items-center h-64 text-gray-500">Loading trainee profile...</div>
-    </Layout>
-  );
+  const handleWageSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/api/checkins', {
+        status: traineeDetail?.status || 'employed',
+        role: traineeDetail?.role || 'Associate',
+        wageBand,
+        usingSkill: true,
+        selfEmployed: false
+      });
+      setShowWageModal(false);
+      setActionSuccess('Wage progression band updated successfully!');
+      setTimeout(() => setActionSuccess(''), 3500);
+      loadProfile();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  const checkins = traineeDetail.checkins || [];
-  const latestCheckin = checkins[checkins.length - 1];
-  const isEmployed = latestCheckin?.status === 'employed' || latestCheckin?.selfEmployed;
+  const handleSkillSubmit = (e) => {
+    e.preventDefault();
+    setShowSkillModal(false);
+    setActionSuccess('Skill utilisation scores updated successfully!');
+    setTimeout(() => setActionSuccess(''), 3500);
+  };
+
+  const t = traineeDetail || {
+    name: auth?.user?.name || 'Amit Patel',
+    outcomeId: 'TP-S1-T01',
+    cohort: '2025-Q1',
+    schemeName: 'Digital Skilling Initiative',
+    status: 'employed',
+    role: 'Junior Software Associate',
+    wageBand: '₹20k - ₹30k',
+    employerValidation: {
+      employerName: 'TechCorp India',
+      status: 'employed',
+      date: '2025-06-20'
+    },
+    timeline: [
+      { date: '2025-01-15', label: 'Training Completed', details: 'Certified in Digital IT & Software' },
+      { date: '2025-04-10', label: 'Job Seeking / Interviewing', details: 'Placed with TechCorp India' },
+      { date: '2025-06-20', label: 'Employer Verified', details: 'Verified by TechCorp India HR' },
+      { date: '2025-09-15', label: '3-Month Retention Check-in', details: 'Status: Employed • Wage: ₹20k - ₹30k' },
+      { date: '2026-01-15', label: '6-Month Retention Verified', details: 'Status: Employed • Using Skills: Yes' },
+    ]
+  };
 
   return (
     <Layout auth={auth} handleLogout={handleLogout}>
       <div className="space-y-6">
         
-        {/* Success Banner */}
+        {/* Success Alert Banner */}
         {actionSuccess && (
-          <div className="bg-green-50 border border-green-200 text-green-800 p-3.5 rounded-xl text-sm font-medium flex items-center justify-between animate-in fade-in">
+          <div className="bg-green-50 border border-green-200 text-green-800 p-3.5 rounded-2xl text-sm font-semibold flex items-center justify-between shadow-sm animate-in fade-in">
             <span className="flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-green-600" /> {actionSuccess}
+              <CheckCircle2 size={18} className="text-green-600" /> {actionSuccess}
             </span>
-            <button onClick={() => setActionSuccess('')} className="text-green-600 hover:text-green-800"><X size={14} /></button>
+            <button onClick={() => setActionSuccess('')} className="text-green-600 hover:text-green-800"><X size={16} /></button>
           </div>
         )}
 
-        {/* 1. MY PROFILE VIEW */}
-        {isProfile && (
-          <div className="space-y-6">
+        {/* Top Profile Banner */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="bg-white/20 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                {t.cohort} Cohort
+              </span>
+              <span className="bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <Check size={11} /> {t.status === 'employed' ? 'Actively Employed' : 'Seeking Placement'}
+              </span>
+            </div>
+            <h1 className="text-2xl font-extrabold">{t.name}</h1>
+            <p className="text-xs text-blue-100 flex items-center gap-3">
+              <span>Scheme: <strong>{t.schemeName || 'Digital Skilling Initiative'}</strong></span>
+              <span>•</span>
+              <span>Anonymous ID: <strong className="font-mono">{t.outcomeId}</strong></span>
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button 
+              onClick={() => setShowPrivacyModal(true)}
+              className="bg-white/10 hover:bg-white/20 border border-white/30 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition"
+            >
+              <Shield size={14} /> Privacy Center
+            </button>
+            <button 
+              onClick={() => setShowUpdateModal(true)}
+              className="bg-white text-blue-700 hover:bg-blue-50 text-xs font-extrabold px-4 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition"
+            >
+              <RefreshCw size={14} /> Update Check-in
+            </button>
+          </div>
+        </div>
+
+        {/* 1. UNIFIED OUTCOME TIMELINE (Core Journey) */}
+        <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+          <div className="flex justify-between items-center pb-2 border-b border-gray-100">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-              <p className="text-gray-500 text-sm">Personal details, training batch credentials, and consent preferences.</p>
+              <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
+                <Clock size={18} className="text-blue-600" /> Longitudinal Outcome Journey
+              </h3>
+              <p className="text-xs text-gray-500">Every portal (Trainee, Employer, and Admin) contributes to this unified longitudinal track.</p>
             </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Profile Card */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-                <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl">
-                  {traineeDetail.name?.split(' ').map(n => n[0]).join('') || 'AP'}
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-lg">{traineeDetail.name || 'Amit Patel'}</h3>
-                  <p className="text-xs text-gray-500">Trainee ID: <span className="font-mono text-gray-700">{traineeDetail.outcomeId || 'TP-2025-Q1-T01'}</span></p>
-                </div>
-                <div className="pt-4 border-t border-gray-100 space-y-2 text-xs text-gray-600">
-                  <p className="flex items-center gap-2"><MapPin size={14} className="text-gray-400" /> North Region, India</p>
-                  <p className="flex items-center gap-2"><Calendar size={14} className="text-gray-400" /> Batch: {traineeDetail.cohort || '2025-Q1'}</p>
-                </div>
-              </div>
-
-              {/* Training Program Details */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm md:col-span-2 space-y-4">
-                <h3 className="font-bold text-gray-900">Skilling Certification</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100">
-                    <p className="text-xs text-gray-400 font-semibold mb-1">Scheme</p>
-                    <p className="font-bold text-gray-800">Digital Skilling Initiative (DSI)</p>
-                  </div>
-                  <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100">
-                    <p className="text-xs text-gray-400 font-semibold mb-1">Trade</p>
-                    <p className="font-bold text-gray-800">IT & Software Associate</p>
-                  </div>
-                  <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100">
-                    <p className="text-xs text-gray-400 font-semibold mb-1">Training Completed On</p>
-                    <p className="font-bold text-gray-800">{traineeDetail.trainedOn || '2025-01-15'}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100">
-                    <p className="text-xs text-gray-400 font-semibold mb-1">Certified Skills</p>
-                    <p className="font-bold text-gray-800">Excel, Python, Digital Docs</p>
-                  </div>
-                </div>
-
-                {/* Consent Section */}
-                <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-sm text-gray-900 flex items-center gap-1.5">
-                      <Shield size={16} className="text-green-600" /> Longitudinal Tracking Consent
-                    </h4>
-                    <p className="text-xs text-gray-500 mt-0.5">Allows anonymous employment signals to measure training impact.</p>
-                  </div>
-                  <button
-                    onClick={handleConsentToggle}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
-                      consent ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    {consent ? '✓ Consent Active' : 'Consent Inactive'}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+              Milestone 4 of 6 Completed
+            </span>
           </div>
-        )}
 
-        {/* 2. OUTCOME JOURNEY VIEW */}
-        {isJourney && (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Outcome Journey Timeline</h1>
-              <p className="text-gray-500 text-sm">Longitudinal milestones tracked over 12 months after completion.</p>
-            </div>
-
-            <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-8">
-              <div className="relative border-l-2 border-blue-200 ml-4 space-y-8 py-2">
-                <div className="relative pl-6">
-                  <div className="absolute -left-[9px] top-1 w-4 h-4 bg-blue-600 rounded-full ring-4 ring-white shadow"></div>
-                  <h4 className="font-bold text-gray-900 text-sm">Training Completed</h4>
-                  <p className="text-xs text-gray-500">Graduated with certification in IT & Software • Jan 2025</p>
-                </div>
-
-                <div className="relative pl-6">
-                  <div className="absolute -left-[9px] top-1 w-4 h-4 bg-blue-600 rounded-full ring-4 ring-white shadow"></div>
-                  <h4 className="font-bold text-gray-900 text-sm">Actively Seeking & Placed</h4>
-                  <p className="text-xs text-gray-500">Secured placement opportunity • Feb 2025</p>
-                </div>
-
-                <div className="relative pl-6">
-                  <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full ring-4 ring-white shadow ${isEmployed ? 'bg-green-600' : 'bg-gray-300'}`}></div>
-                  <h4 className="font-bold text-gray-900 text-sm">Employed (Initial Milestone)</h4>
-                  <p className="text-xs text-gray-500">Role: Junior Software Associate ({latestCheckin?.wageBand || '₹20k - ₹30k'})</p>
-                </div>
-
-                <div className="relative pl-6">
-                  <div className="absolute -left-[9px] top-1 w-4 h-4 bg-amber-500 rounded-full ring-4 ring-white shadow"></div>
-                  <h4 className="font-bold text-gray-900 text-sm">3-Month Retention Check-in (Current Phase)</h4>
-                  <p className="text-xs text-gray-500">Due for verification and wage progression review.</p>
-                  <button 
-                    onClick={() => setShowUpdateModal(true)} 
-                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition"
-                  >
-                    Submit 3-Month Check-in →
-                  </button>
-                </div>
-
-                <div className="relative pl-6">
-                  <div className="absolute -left-[9px] top-1 w-4 h-4 bg-gray-200 rounded-full ring-4 ring-white"></div>
-                  <h4 className="font-bold text-gray-400 text-sm">6-Month Longitudinal Review</h4>
-                  <p className="text-xs text-gray-400">Scheduled for August 2025.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 3. EMPLOYMENT UPDATES VIEW */}
-        {isUpdates && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Employment Updates History</h1>
-                <p className="text-gray-500 text-sm">All self-reported check-ins and employer verification confirmations.</p>
-              </div>
-              <button
-                onClick={() => setShowUpdateModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition flex items-center gap-1.5 shadow-sm"
+          {/* Stepper Progress Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 pt-2">
+            {[
+              { step: '1. Training Completed', date: 'Jan 2025', status: 'done', desc: 'Certified' },
+              { step: '2. Job Seeking', date: 'Apr 2025', status: 'done', desc: 'Placed' },
+              { step: '3. Employer Verified', date: 'Jun 2025', status: 'done', desc: 'TechCorp India' },
+              { step: '4. 3M Retention', date: 'Sep 2025', status: 'done', desc: '₹20k - ₹30k' },
+              { step: '5. 6M Retention', date: 'Jan 2026', status: 'done', desc: 'Using Skills' },
+              { step: '6. 12M Outcome', date: 'Jul 2026', status: 'upcoming', desc: 'Upcoming' },
+            ].map((m, i) => (
+              <div 
+                key={i} 
+                className={`p-3.5 rounded-2xl border flex flex-col justify-between transition-all ${
+                  m.status === 'done' 
+                    ? 'bg-blue-50/60 border-blue-200 text-blue-900' 
+                    : 'bg-gray-50 border-gray-200 text-gray-400'
+                }`}
               >
-                + New Update
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[10px] font-bold uppercase">{m.date}</span>
+                  {m.status === 'done' ? <CheckCircle2 size={14} className="text-blue-600" /> : <Clock size={14} />}
+                </div>
+                <p className="text-xs font-extrabold text-gray-900">{m.step}</p>
+                <p className="text-[11px] text-gray-500 mt-1 font-medium">{m.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 2. THREE KEY METRICS ROW */}
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Card 1: Employment Status */}
+          <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs font-bold text-gray-500 uppercase">Employment Status</span>
+                <span className="bg-green-100 text-green-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
+                  Verified
+                </span>
+              </div>
+              <h3 className="text-xl font-extrabold text-gray-900 mb-1">{t.role || 'Software Associate'}</h3>
+              <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                <Building size={14} className="text-gray-400" /> {t.employerValidation?.employerName || 'TechCorp India'}
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowUpdateModal(true)}
+              className="mt-6 w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-800 text-xs font-bold rounded-xl border border-gray-200 transition"
+            >
+              Update Job Status →
+            </button>
+          </div>
+
+          {/* Card 2: Wage Progression Band */}
+          <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs font-bold text-gray-500 uppercase">Current Wage Band</span>
+                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
+                  +24% Growth
+                </span>
+              </div>
+              <h3 className="text-xl font-extrabold text-gray-900 mb-1">{t.wageBand || '₹20k - ₹30k'}</h3>
+              <p className="text-xs text-gray-500">Starting baseline: ₹15k at initial placement</p>
+            </div>
+            <button 
+              onClick={() => setShowWageModal(true)}
+              className="mt-6 w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-800 text-xs font-bold rounded-xl border border-gray-200 transition"
+            >
+              Update Salary Range →
+            </button>
+          </div>
+
+          {/* Card 3: Employer Verification Status */}
+          <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs font-bold text-gray-500 uppercase">Employer Triangulation</span>
+                <span className="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
+                  Confirmed
+                </span>
+              </div>
+              <h3 className="text-xl font-extrabold text-gray-900 mb-1">TechCorp India</h3>
+              <p className="text-xs text-gray-500">Verified by HR Manager on {t.employerValidation?.date || '2025-06-20'}</p>
+            </div>
+            <div className="mt-6 p-2 bg-purple-50 rounded-xl border border-purple-100 text-center text-[11px] font-bold text-purple-900">
+              ✓ Low-Burden 30-Sec Validation Active
+            </div>
+          </div>
+        </div>
+
+        {/* 3. SKILL UTILISATION RADAR & BREAKDOWN */}
+        <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-5">
+          <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+            <div>
+              <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
+                <BarChart2 size={18} className="text-blue-600" /> Your Skill Utilisation Score
+              </h3>
+              <p className="text-xs text-gray-500">How frequently you apply the skills learned in your training on the job.</p>
+            </div>
+            <button 
+              onClick={() => setShowSkillModal(true)}
+              className="text-xs font-bold text-blue-600 hover:underline"
+            >
+              Update Skill Feedback →
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-3.5">
+              {[
+                { label: 'Technical Core Skills', score: skillRatings.technical, color: 'bg-blue-600' },
+                { label: 'Communication & Teamwork', score: skillRatings.communication, color: 'bg-emerald-600' },
+                { label: 'Digital Tools & Software', score: skillRatings.digitalTools, color: 'bg-amber-500' },
+                { label: 'Problem Solving & Quality', score: skillRatings.problemSolving, color: 'bg-purple-600' },
+              ].map((s, i) => (
+                <div key={i} className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold text-gray-700">
+                    <span>{s.label}</span>
+                    <span>{s.score}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                    <div className={`${s.color} h-2.5 rounded-full transition-all`} style={{ width: `${s.score}%` }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-2xl border border-blue-100 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full">
+                  Skill Intelligence Insights
+                </span>
+                <div className="mt-3 space-y-2 text-xs">
+                  <p className="text-gray-800">
+                    🌟 <strong>Your Strongest Skill:</strong> <span className="text-emerald-700 font-bold">Communication (90%)</span>
+                  </p>
+                  <p className="text-gray-800">
+                    📈 <strong>Recommended to Strengthen:</strong> <span className="text-amber-700 font-bold">Digital Tools (60%)</span>
+                  </p>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-2">
+                  Tip: Completing the 2-hour micro-learning module on Digital Documentation can unlock higher wage bands in your next review!
+                </p>
+              </div>
+
+              <button 
+                onClick={() => setShowSkillModal(true)}
+                className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm"
+              >
+                Log Skill Usage Feedback
               </button>
             </div>
-
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Date</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Role / Trade</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Monthly Wage</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Skills In Use</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Employer Verification</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {checkins.length === 0 ? (
-                    <tr><td colSpan="6" className="px-5 py-6 text-center text-gray-400">No updates logged yet. Submit your first update above.</td></tr>
-                  ) : (
-                    checkins.map((c, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50">
-                        <td className="px-5 py-4 text-xs font-medium text-gray-600">{c.date}</td>
-                        <td className="px-5 py-4">
-                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold capitalize ${
-                            c.status === 'employed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {c.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-xs font-semibold text-gray-900">{c.role || 'Associate'}</td>
-                        <td className="px-5 py-4 text-xs font-medium text-gray-700">{c.wageBand}</td>
-                        <td className="px-5 py-4 text-xs text-gray-600">{c.usingSkill ? '✓ Yes' : '— No'}</td>
-                        <td className="px-5 py-4">
-                          <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                            <CheckCircle2 size={12} /> Verified
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
           </div>
-        )}
-
-        {/* 4. MAIN DASHBOARD VIEW (Default) */}
-        {!isProfile && !isJourney && !isUpdates && (
-          <>
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Good morning, {traineeDetail.name || auth.user.name}</h1>
-                <p className="text-gray-500 text-sm">Keep tracking your journey. You're doing great!</p>
-              </div>
-            </div>
-
-            {/* Top KPI Cards */}
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-4">Current Status</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className={`text-xl font-bold ${isEmployed ? 'text-green-600' : 'text-blue-600'}`}>
-                      {isEmployed ? 'Employed' : 'Seeking'}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Since Jan 2025</p>
-                  </div>
-                  {isEmployed && (
-                    <div className="bg-green-50 text-green-700 text-[10px] font-bold px-2 py-1 rounded border border-green-100">
-                      Verified
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-4">Monthly Income</p>
-                <p className="text-xl font-bold text-blue-600">
-                  {latestCheckin?.wageBand || '₹20k - ₹30k'}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">Updated recently</p>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-4">Skills in Use</p>
-                <p className="text-xl font-bold text-blue-600">
-                  {latestCheckin?.usingSkill !== false ? '80%' : 'Pending'}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">Using trained skills</p>
-              </div>
-            </div>
-
-            {/* Outcome Journey Timeline Preview */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-              <h3 className="font-bold text-gray-900 mb-8">Outcome Journey</h3>
-              
-              <div className="relative">
-                <div className="absolute top-3 left-0 w-full h-1 bg-gray-100 -z-10"></div>
-                
-                <div className="flex justify-between items-start text-center">
-                  <div className="flex flex-col items-center">
-                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-sm mb-3">✓</div>
-                    <p className="text-xs font-bold text-gray-900">Training<br/>Completed</p>
-                  </div>
-                  
-                  <div className="flex flex-col items-center">
-                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-sm mb-3">✓</div>
-                    <p className="text-xs font-bold text-gray-900">Actively<br/>Seeking</p>
-                  </div>
-                  
-                  <div className="flex flex-col items-center">
-                    <div className={`w-6 h-6 rounded-full ${isEmployed ? 'bg-green-600 text-white' : 'bg-gray-200'} flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-sm mb-3`}>
-                      {isEmployed ? '✓' : '3'}
-                    </div>
-                    <p className={`text-xs font-bold ${isEmployed ? 'text-gray-900' : 'text-gray-400'}`}>Employed</p>
-                  </div>
-                  
-                  <div className="flex flex-col items-center">
-                    <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-sm mb-3">4</div>
-                    <p className="text-xs font-bold text-gray-900">3-Month<br/>Review</p>
-                  </div>
-                  
-                  <div className="flex flex-col items-center">
-                    <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-xs font-bold ring-4 ring-white shadow-sm mb-3">5</div>
-                    <p className="text-xs font-bold text-gray-400">6-Month<br/>Review</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-8 text-center">
-                <button 
-                  onClick={() => navigate('/trainee/journey')}
-                  className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-                >
-                  View full timeline →
-                </button>
-              </div>
-            </div>
-
-            {/* Bottom Split */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-6">Latest Follow-up</h3>
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-4 items-start">
-                    <div className="text-blue-600 bg-white p-2 rounded-lg border border-blue-100"><UserCheck size={20} /></div>
-                    <div>
-                      <h4 className="font-bold text-gray-900 text-sm">3-Month Follow-up</h4>
-                      <p className="text-xs text-gray-500 mt-1">Due today • Verify employment status & wage</p>
-                    </div>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setShowUpdateModal(true)}
-                  className="w-max mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg text-sm transition-colors shadow-sm"
-                >
-                  Update Now
-                </button>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="font-bold text-gray-900 mb-4">Quick Actions</h3>
-                <div className="space-y-2">
-                  <button 
-                    onClick={() => setShowUpdateModal(true)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors group text-left"
-                  >
-                    <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                      <Briefcase size={18} className="text-blue-500" />
-                      Update Employment Status
-                    </div>
-                    <ArrowRight size={16} className="text-gray-400 group-hover:text-blue-600" />
-                  </button>
-                  
-                  <button 
-                    onClick={() => setShowWageModal(true)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors group text-left"
-                  >
-                    <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                      <CreditCard size={18} className="text-blue-500" />
-                      Add Wage Information
-                    </div>
-                    <ArrowRight size={16} className="text-gray-400 group-hover:text-blue-600" />
-                  </button>
-                  
-                  <button 
-                    onClick={() => setShowSkillModal(true)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors group text-left"
-                  >
-                    <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                      <Award size={18} className="text-blue-500" />
-                      Share Skill Usage & Feedback
-                    </div>
-                    <ArrowRight size={16} className="text-gray-400 group-hover:text-blue-600" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        </div>
 
         {/* ================= MODALS ================= */}
 
-        {/* 1. Update Employment Modal */}
+        {/* 1. Update Employment Check-in Modal */}
         {showUpdateModal && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-7 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-gray-900 text-lg">Update Employment Status</h3>
-                <button onClick={() => setShowUpdateModal(false)} className="text-gray-400 hover:text-gray-700 p-1 rounded-lg">
-                  <X size={18} />
-                </button>
+                <h3 className="font-bold text-gray-900 text-lg">Quick Longitudinal Check-in</h3>
+                <button onClick={() => setShowUpdateModal(false)} className="text-gray-400 hover:text-gray-700 p-1"><X size={18} /></button>
               </div>
 
-              <form onSubmit={handleCheckinSubmit} className="space-y-4">
+              <form onSubmit={handleCheckinSubmit} className="space-y-4 text-xs">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Current Working Status</label>
+                  <label className="font-bold text-gray-700 block mb-1">What is your current working status?</label>
                   <select 
                     value={status} 
                     onChange={e => setStatus(e.target.value)}
-                    className="w-full border border-gray-300 rounded-xl p-2.5 text-sm bg-gray-50"
+                    className="w-full p-2.5 border border-gray-300 rounded-xl bg-gray-50 font-semibold"
                   >
                     <option value="employed">Employed (Full-time / Part-time)</option>
-                    <option value="self-employed">Self-Employed / Freelancer</option>
-                    <option value="apprenticeship">Apprenticeship / Internship</option>
-                    <option value="not-employed">Not currently employed (Seeking)</option>
+                    <option value="self-employed">Self-Employed / Freelance</option>
+                    <option value="apprenticeship">Apprenticeship</option>
+                    <option value="seeking">Looking for Work / Seeking</option>
                   </select>
                 </div>
 
-                {status !== 'not-employed' ? (
-                  <>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Job Title / Role</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={roleTitle}
-                        onChange={e => setRoleTitle(e.target.value)}
-                        placeholder="e.g. Junior IT Associate"
-                        className="w-full border border-gray-300 rounded-xl p-2.5 text-sm bg-gray-50"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Approximate Monthly Salary</label>
-                      <select 
-                        value={wageBand} 
-                        onChange={e => setWageBand(e.target.value)}
-                        className="w-full border border-gray-300 rounded-xl p-2.5 text-sm bg-gray-50"
-                      >
-                        <option>Below ₹10k</option>
-                        <option>₹10k–15k</option>
-                        <option>₹15k–20k</option>
-                        <option>₹20k–30k</option>
-                        <option>Above ₹30k</option>
-                      </select>
-                    </div>
-                  </>
-                ) : (
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Primary Reason (Dropout Tracking)</label>
-                    <select 
-                      value={dropoutReason} 
-                      onChange={e => setDropoutReason(e.target.value)}
-                      className="w-full border border-gray-300 rounded-xl p-2.5 text-sm bg-gray-50"
-                    >
-                      <option>Low wages / compensation</option>
-                      <option>Skill mismatch with market demand</option>
-                      <option>Location / Relocation constraints</option>
-                      <option>Higher education / Personal reasons</option>
-                    </select>
-                  </div>
-                )}
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Current Job Role / Designation</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={roleTitle}
+                    onChange={e => setRoleTitle(e.target.value)}
+                    className="w-full p-2.5 border border-gray-300 rounded-xl bg-gray-50"
+                  />
+                </div>
 
-                <div className="flex items-center gap-2 pt-2">
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Monthly Wage Range</label>
+                  <select 
+                    value={wageBand} 
+                    onChange={e => setWageBand(e.target.value)}
+                    className="w-full p-2.5 border border-gray-300 rounded-xl bg-gray-50"
+                  >
+                    <option>Below ₹10k</option>
+                    <option>₹10k - ₹20k</option>
+                    <option>₹20k - ₹30k</option>
+                    <option>₹30k - ₹50k</option>
+                    <option>Above ₹50k</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
                   <input 
                     type="checkbox" 
                     id="usingSkillCheck"
                     checked={usingSkill}
                     onChange={e => setUsingSkill(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 rounded"
                   />
-                  <label htmlFor="usingSkillCheck" className="text-xs text-gray-700 font-medium">
-                    I am actively using the skills acquired during my training program
+                  <label htmlFor="usingSkillCheck" className="text-gray-800 font-medium">
+                    I am actively applying the skills I learned during training.
                   </label>
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-gray-100">
-                  <button 
-                    type="button"
-                    onClick={() => setShowUpdateModal(false)}
-                    className="flex-1 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit"
-                    className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 shadow-sm"
-                  >
-                    Save Status Update
-                  </button>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowUpdateModal(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl font-semibold">Cancel</button>
+                  <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-md">Submit Check-in</button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* 2. Add Wage Information Modal */}
+        {/* 2. Wage Modal */}
         {showWageModal && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-7 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-gray-900 text-lg">Wage Progression</h3>
+                <h3 className="font-bold text-gray-900 text-lg">Update Salary Progression</h3>
                 <button onClick={() => setShowWageModal(false)} className="text-gray-400 hover:text-gray-700 p-1"><X size={18} /></button>
               </div>
-              <form onSubmit={handleCheckinSubmit} className="space-y-4">
+
+              <form onSubmit={handleWageSubmit} className="space-y-4 text-xs">
+                <p className="text-gray-500">Track how your wage increases over your 3, 6, and 12-month career journey.</p>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Current Monthly Pay Band</label>
-                  <select value={wageBand} onChange={e => setWageBand(e.target.value)} className="w-full border border-gray-300 rounded-xl p-2.5 text-sm bg-gray-50">
+                  <label className="font-bold text-gray-700 block mb-1">Select Updated Salary Band</label>
+                  <select 
+                    value={wageBand} 
+                    onChange={e => setWageBand(e.target.value)}
+                    className="w-full p-2.5 border border-gray-300 rounded-xl bg-gray-50 text-sm font-bold"
+                  >
                     <option>Below ₹10k</option>
-                    <option>₹10k–15k</option>
-                    <option>₹15k–20k</option>
-                    <option>₹20k–30k</option>
-                    <option>Above ₹30k</option>
+                    <option>₹10k - ₹20k</option>
+                    <option>₹20k - ₹30k</option>
+                    <option>₹30k - ₹50k</option>
+                    <option>Above ₹50k</option>
                   </select>
                 </div>
-                <p className="text-xs text-gray-500 bg-blue-50 p-3 rounded-xl border border-blue-100">
-                  🔒 <strong>Privacy Note:</strong> Exact salary is never stored or revealed. Only broad statistical bands are used for programme impact evaluations.
-                </p>
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowWageModal(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold">Cancel</button>
-                  <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700">Submit Wage Update</button>
+                  <button type="button" onClick={() => setShowWageModal(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl font-semibold">Cancel</button>
+                  <button type="submit" className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-md">Save Wage Update</button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* 3. Share Skill Usage Modal */}
+        {/* 3. Skill Utilisation Modal */}
         {showSkillModal && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-7 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-gray-900 text-lg">Skill Usage Feedback</h3>
+                <h3 className="font-bold text-gray-900 text-lg">Update Skill Utilisation</h3>
                 <button onClick={() => setShowSkillModal(false)} className="text-gray-400 hover:text-gray-700 p-1"><X size={18} /></button>
               </div>
-              <form onSubmit={handleCheckinSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">How often do you apply your course skills?</label>
-                  <select className="w-full border border-gray-300 rounded-xl p-2.5 text-sm bg-gray-50">
-                    <option>Daily in my primary responsibilities</option>
-                    <option>Several times per week</option>
-                    <option>Occasionally / Supplementary</option>
-                    <option>Rarely / Not currently using</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Emerging Skill Needs</label>
-                  <input type="text" placeholder="e.g. Advanced Data Analytics, Cloud basics" className="w-full border border-gray-300 rounded-xl p-2.5 text-sm bg-gray-50" />
-                </div>
+
+              <form onSubmit={handleSkillSubmit} className="space-y-4 text-xs">
+                {Object.keys(skillRatings).map(k => (
+                  <div key={k} className="space-y-1">
+                    <div className="flex justify-between font-bold text-gray-700 capitalize">
+                      <span>{k.replace(/([A-Z])/g, ' $1')}</span>
+                      <span>{skillRatings[k]}%</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="10" 
+                      max="100" 
+                      value={skillRatings[k]}
+                      onChange={e => setSkillRatings({ ...skillRatings, [k]: parseInt(e.target.value) })}
+                      className="w-full h-2 bg-gray-200 rounded-lg cursor-pointer accent-blue-600"
+                    />
+                  </div>
+                ))}
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowSkillModal(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold">Cancel</button>
-                  <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700">Submit Feedback</button>
+                  <button type="button" onClick={() => setShowSkillModal(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl font-semibold">Cancel</button>
+                  <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-md">Save Skill Scores</button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* 4. Granular Privacy Center Modal */}
+        {showPrivacyModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-7 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                  <Shield size={20} className="text-blue-600" /> Trainee Privacy & Data Protection Center
+                </h3>
+                <button onClick={() => setShowPrivacyModal(false)} className="text-gray-400 hover:text-gray-700 p-1"><X size={18} /></button>
+              </div>
+
+              <div className="space-y-3.5 text-xs">
+                <div className="p-3.5 bg-blue-50 rounded-2xl border border-blue-100 space-y-1">
+                  <p className="font-bold text-blue-950">Your Digital Privacy Guarantees:</p>
+                  <p className="text-blue-700">Under the Data Protection & Consent framework, your personal contact, Aadhaar, and exact finances are never exposed. All analytics use your masked Anonymous ID: <strong className="font-mono">{t.outcomeId}</strong>.</p>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer">
+                    <span className="font-semibold text-gray-800">Longitudinal Career Tracking Consent</span>
+                    <input type="checkbox" checked={consent} onChange={handleConsentToggle} className="w-4 h-4 text-blue-600 rounded" />
+                  </label>
+
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer">
+                    <span className="font-semibold text-gray-800">Allow Employer Verification Triangulation</span>
+                    <input type="checkbox" checked={allowEmployerVerification} onChange={e => setAllowEmployerVerification(e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
+                  </label>
+
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer">
+                    <span className="font-semibold text-gray-800">Participate in Anonymized Scheme Analytics</span>
+                    <input type="checkbox" checked={allowPolicyAnalytics} onChange={e => setAllowPolicyAnalytics(e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
+                  </label>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setShowPrivacyModal(false)}
+                className="mt-6 w-full py-2.5 bg-gray-900 text-white rounded-xl font-bold text-xs hover:bg-gray-800"
+              >
+                Done
+              </button>
             </div>
           </div>
         )}
